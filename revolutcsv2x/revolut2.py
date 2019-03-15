@@ -9,7 +9,6 @@ sys.path.insert(0,dirname(dirname(abspath(__file__))))
 from revolutcsv2x.output import RevolutCSV, factory
 import logging
 
-
 handler = logging.StreamHandler()
 logger = logging.getLogger('revolut')
 logger.addHandler(handler)

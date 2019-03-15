@@ -1,6 +1,10 @@
+import re
+
 from revolutcsv2x.helpers import indexed_fields, line2fields
-from revolutcsv2x.revolut_csv import RevolutCSV, get_transaction
-from datetime import datetime
+from revolutcsv2x.revolut_csv import RevolutCSV, get_transaction, istransfer
+from datetime import datetime, date
+import mt940_writer as mt940
+
 
 DATE,DESC,OUT,IN,XOUT,XIN,BALANCE,CAT,NOTES=[x for x in range(0,9)]
 EOL="\n"
@@ -53,14 +57,7 @@ class FormattedOutput(object):
         return open(self.output_filename, 'w')
 
     def convert(self, csv: RevolutCSV):
-
-        revolut_out = self.create_output(csv)
-
-        for line in csv.read_csv():
-            formatted_entry = self.format_entry(h=csv.header, line=line)
-            revolut_out.write(formatted_entry)
-
-        revolut_out.close()
+        raise NotImplementedError()
 
 
 factory = FormattedOutput.factory
@@ -91,16 +88,78 @@ class QIF(FormattedOutput):
             "^", ""
         ])
 
+    def convert(self, csv: RevolutCSV):
+
+        revolut_out = self.create_output(csv)
+
+        for line in csv.read_csv():
+            formatted_entry = self.format_entry(h=csv.header, line=line)
+            revolut_out.write(formatted_entry)
+
+        revolut_out.close()
 
 
+from decimal import Decimal
+
+@register("STA")
 @register("MT940")
 @register("mt940")
 class MT940(FormattedOutput):
 
-    #format = 'mt940'
-
     def __init__(self):
-        raise NotImplementedError()
+        super(MT940,self).__init__()
+        self.currency = None
+        self.account = None
+        self.closing_balance = None
+        self.opening_balance = None
+
+    def convert(self, csv: RevolutCSV):
+
+        revolut_out = self.create_output(csv)
+
+        transactions = []
+        for line in csv.read_csv():
+            transactions.append(
+                self.format_entry(h=csv.header, line=line)
+            )
+        transactions = transactions[::-1] # reverse order
+
+        statement = mt940.Statement(
+            '59716', ## fake
+            self.account,
+            '1/1',
+            self.opening_balance,
+            self.closing_balance,
+            transactions
+        )
+        revolut_out.write(str(statement)+EOL)
+
+        revolut_out.close()
+
+    def format_entry(self, h, line):
+        fields = indexed_fields(h, line2fields(line))
+        label = fields[h[DESC]]
+        balance = Decimal(fields[h[BALANCE]])
+        transaction_date = datetime.strptime(fields[h[DATE]], '%b %d, %Y').date()
+
+        amount = get_transaction(fields[h[IN]], fields[h[OUT]], fields[h[XIN]], fields[h[XOUT]])
+        amount = Decimal(amount)
+
+        if self.currency is None:
+            self.currency = re.search('\(.*\)',h[OUT]).group()
+            self.account = mt940.Account('DE45500105178431215523','') ## fake account as not available in revolut statement
+            self.closing_balance = mt940.Balance(balance, transaction_date, self.currency)
+
+        previous_balance = balance - amount
+
+        self.opening_balance = mt940.Balance(previous_balance, transaction_date, self.currency)
+
+        transfer_type = mt940.TransactionType.transfer if istransfer( fields[h[XIN]], fields[h[XOUT]]) \
+                                else mt940.TransactionType.foreign_exchange
+
+        return mt940.Transaction(transaction_date, Decimal(amount), transfer_type, label)
+
+
 
 
 

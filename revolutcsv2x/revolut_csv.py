@@ -1,5 +1,9 @@
 from revolutcsv2x.helpers import line2fields
 
+def istransfer(XI,XO):
+    if not XI is None and XI != "" and not XO is None and XO != "":
+        return False
+    return True
 
 def get_transaction(I,O,XI,XO):
     if not I is None and I != "":
