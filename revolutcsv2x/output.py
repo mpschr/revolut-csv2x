@@ -1,5 +1,5 @@
-from revolut2.helpers import indexed_fields, line2fields
-from revolut2.revolut_csv import RevolutCSV, get_transaction
+from revolutcsv2x.helpers import indexed_fields, line2fields
+from revolutcsv2x.revolut_csv import RevolutCSV, get_transaction
 from datetime import datetime
 
 DATE,DESC,OUT,IN,XOUT,XIN,BALANCE,CAT,NOTES=[x for x in range(0,9)]

@@ -1,4 +1,4 @@
-from revolut2.helpers import line2fields
+from revolutcsv2x.helpers import line2fields
 
 
 def get_transaction(I,O,XI,XO):
