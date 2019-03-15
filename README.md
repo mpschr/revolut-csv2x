@@ -4,6 +4,7 @@ Convert the Revolut CSV-statement into a standardized format.
 
 Currently available:
  - CSV 2 QIF
+ - CSV 2 MT940.sta (still buggy)
 
 ### Usage: 
     #genralized command
@@ -15,5 +16,5 @@ Currently available:
  
 If anyone is looking to contribute:
 
- - CSV 2 MT940/MT942
+ - CAMT 052/053 XML
 
