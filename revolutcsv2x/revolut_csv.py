@@ -1,4 +1,7 @@
 from revolutcsv2x.helpers import line2fields
+from revolutcsv2x.constants import EOL, DATE, DESC, OUT, IN, XOUT, XIN, BALANCE, CAT, NOTES
+import re
+
 
 def istransfer(XI,XO):
     if not XI is None and XI != "" and not XO is None and XO != "":
@@ -20,9 +23,11 @@ class RevolutCSV(object):
     def __init__(self, csv_filename):
         self.csv_filename = csv_filename
         self.header = None
+        self.currency = None
 
     def read_csv(self):
         with open(self.csv_filename,'r') as revolut_in:
             self.header = line2fields(revolut_in.readline())
+            self.currency = self.currency = re.search('\(.*\)', self.header[OUT]).group()
             for line in revolut_in:
                 yield line

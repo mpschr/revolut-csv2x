@@ -1,13 +1,10 @@
 import re
 
+from revolutcsv2x.constants import EOL, DATE, DESC, OUT, IN, XOUT, XIN, BALANCE, CAT, NOTES
 from revolutcsv2x.helpers import indexed_fields, line2fields
 from revolutcsv2x.revolut_csv import RevolutCSV, get_transaction, istransfer
-from datetime import datetime, date
-import mt940_writer as mt940
-
-
-DATE,DESC,OUT,IN,XOUT,XIN,BALANCE,CAT,NOTES=[x for x in range(0,9)]
-EOL="\n"
+from datetime import datetime
+import revolutcsv2x.mt940_writer as mt940
 
 now = datetime.now()
 today = f"{now.year}-{now.month}-{now.day}"
@@ -91,6 +88,7 @@ class QIF(FormattedOutput):
     def convert(self, csv: RevolutCSV):
 
         revolut_out = self.create_output(csv)
+        revolut_out.write("!Type:Bank" + EOL)
 
         for line in csv.read_csv():
             formatted_entry = self.format_entry(h=csv.header, line=line)
@@ -108,10 +106,10 @@ class MT940(FormattedOutput):
 
     def __init__(self):
         super(MT940,self).__init__()
-        self.currency = None
         self.account = None
         self.closing_balance = None
         self.opening_balance = None
+        self.currency = None
 
     def convert(self, csv: RevolutCSV):
 
@@ -119,6 +117,8 @@ class MT940(FormattedOutput):
 
         transactions = []
         for line in csv.read_csv():
+            if self.currency is None:
+                self.currency = csv.currency
             transactions.append(
                 self.format_entry(h=csv.header, line=line)
             )
@@ -132,7 +132,7 @@ class MT940(FormattedOutput):
             self.closing_balance,
             transactions
         )
-        revolut_out.write(str(statement)+EOL)
+        revolut_out.write(str(statement) + EOL)
 
         revolut_out.close()
 
@@ -145,8 +145,7 @@ class MT940(FormattedOutput):
         amount = get_transaction(fields[h[IN]], fields[h[OUT]], fields[h[XIN]], fields[h[XOUT]])
         amount = Decimal(amount)
 
-        if self.currency is None:
-            self.currency = re.search('\(.*\)',h[OUT]).group()
+        if self.account is None:
             self.account = mt940.Account('DE45500105178431215523','') ## fake account as not available in revolut statement
             self.closing_balance = mt940.Balance(balance, transaction_date, self.currency)
 
@@ -157,7 +156,8 @@ class MT940(FormattedOutput):
         transfer_type = mt940.TransactionType.transfer if istransfer( fields[h[XIN]], fields[h[XOUT]]) \
                                 else mt940.TransactionType.foreign_exchange
 
-        return mt940.Transaction(transaction_date, Decimal(amount), transfer_type, label)
+        return mt940.Transaction(transaction_date, Decimal(amount), transfer_type,
+                                 "NONREF", self.currency, label)
 
 
 
