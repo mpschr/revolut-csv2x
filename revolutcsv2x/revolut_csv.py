@@ -9,6 +9,10 @@ def istransfer(XI,XO):
     return True
 
 def get_transaction(I,O,XI,XO):
+    I = I.replace(',','')
+    O = O.replace(',','')
+    XI = XI.replace(',','')
+    XO = XO.replace(',','')
     if not I is None and I != "":
         return float(I)
     if not O is None and O != "":
