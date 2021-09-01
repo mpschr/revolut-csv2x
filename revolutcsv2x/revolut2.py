@@ -1,7 +1,4 @@
 import sys
-
-
-import sys
 from os.path import dirname, abspath
 
 sys.path.insert(0,dirname(dirname(abspath(__file__))))
@@ -17,7 +14,7 @@ logger.setLevel(logging.INFO)
 if len(sys.argv) != 3:
     print("Usage: ./revolutcsv2x.py desired_format input_csv")
     exit()
-prog, desired_format, revolut_csv_filename = sys.argv  # type: (str, str, str)
+prog, desired_format, revolut_csv_filename = sys.argv  ## type: (str, str, str)
 
 csv = RevolutCSV(revolut_csv_filename)
 logger.info(f"Reading Revolut CSV-File {csv.csv_filename}")

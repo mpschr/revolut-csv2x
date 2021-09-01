@@ -4,3 +4,5 @@ input-csv
 .idea*
 .idea/*
 .DS_Store
+conversions
+.vscode/launch.json

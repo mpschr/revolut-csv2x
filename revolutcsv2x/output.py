@@ -1,5 +1,3 @@
-import re
-
 from revolutcsv2x.constants import EOL, DATE, DESC, OUT, IN, XOUT, XIN, BALANCE, CAT, NOTES
 from revolutcsv2x.helpers import indexed_fields, line2fields
 from revolutcsv2x.revolut_csv import RevolutCSV, get_transaction, istransfer
@@ -71,7 +69,7 @@ class QIF(FormattedOutput):
 
 
     def format_entry(self, h, line):
-        fields = indexed_fields(h, line2fields(line))
+        fields = indexed_fields(h, line)
         label = fields[h[DESC]]
         category = fields[h[CAT]]
         date = datetime.strptime(fields[h[DATE]], '%b %d, %Y').strftime('%d/%m/%Y')
@@ -137,10 +135,10 @@ class MT940(FormattedOutput):
         revolut_out.close()
 
     def format_entry(self, h, line):
-        fields = indexed_fields(h, line2fields(line))
+        fields = indexed_fields(h, line)
         label = fields[h[DESC]]
         balance = Decimal(fields[h[BALANCE]])
-        transaction_date = datetime.strptime(fields[h[DATE]], '%b %d, %Y').date()
+        transaction_date = datetime.strptime(fields[h[DATE]], '%b %d,%Y').date()
 
         amount = get_transaction(fields[h[IN]], fields[h[OUT]], fields[h[XIN]], fields[h[XOUT]])
         amount = Decimal(amount)
